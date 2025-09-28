@@ -9,6 +9,10 @@ import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+
+import java.io.IOException;
 
 /*Configuracion: -container -host 127.0.0.1 -port 1099 nombre2:es.usal.pa.Agente2
 "Conectate al conteiner que esta corrienda en mi propia máquina (127.0.0.1) en el puerto 1099,
@@ -23,17 +27,8 @@ public class Agente1 extends Agent {
     protected CyclicBehaviour cyclicBehaviour;
 
     protected void setup() {
-        //Este es el pto de entrada d eun agente
-        cyclicBehaviour = new CyclicBehaviour(this) {
-            private static final long serialVersionUID = 1L;
-
-            public void action() {
-                //Código que se repite continuamente
-                block();
-            }
-        };
-        addBehaviour(cyclicBehaviour);
-        //"Este agente va a exe. este comportamiento"
+        //Este es el pto de entrada de un agente
+        System.out.println(getLocalName() + ": Agente Iniciado");
 
         //REGISTRAR SERVICIO
         DFAgentDescription dfd = new DFAgentDescription();
@@ -54,6 +49,44 @@ public class Agente1 extends Agent {
         } catch (FIPAException e) {
             System.out.println(getLocalName() + "No pudo registrarse" + e.getACLMessage());
         }
+
+
+        //Comportamiento cicñico: recibir mensajes
+        cyclicBehaviour = new CyclicBehaviour(this) {
+            private static final long serialVersionUID = 1L;
+            public void action() {
+                MessageTemplate mt = MessageTemplate.and (
+                        MessageTemplate.MatchPerformative (ACLMessage.REQUEST),
+                        MessageTemplate.MatchOntology("ontologia")
+                );
+
+                ACLMessage msg = blockingReceive(mt);
+                if (msg!=null){
+                    try{
+                        System.out.println(getLocalName() + "ha enviando recibido: " + msg.getContentObject());
+                    }
+                    catch (UnreadableException e){
+                        e.printStackTrace();
+                    }
+                }
+                else{
+                    block();
+                }
+            }
+        };
+
+        //Enviar mensaje a Agente2
+        ACLMessage mensajeAgente2 = new ACLMessage(ACLMessage.REQUEST);
+        mensajeAgente2.addReceiver(new AID("Agente2", AID.ISLOCALNAME));
+        mensajeAgente2.setOntology( ("ontologia"));
+        try {
+            mensajeAgente2.setContentObject("Hola desde Agente1");
+        } catch (Exception e) {
+             e.printStackTrace();
+        }
+        send (mensajeAgente2);
+        System.out.println(getLocalName () + "ha enviado mensaje a Agente2");
+
     }
 
 }
