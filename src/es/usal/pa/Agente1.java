@@ -27,20 +27,22 @@ public class Agente1 extends Agent {
     protected CyclicBehaviour cyclicBehaviour;
 
     protected void setup() {
-        //Este es el pto de entrada de un agente
+        //Este es el pto de entrada de un agente, es el primer método que se ejecutando cuando el agente arranca
+        //Se configura lo que el agente hará al inicio
+
         System.out.println(getLocalName() + ": Agente Iniciado");
 
-        //REGISTRAR SERVICIO
+        //Crear directorio de servicios (paginas amarillas)
         DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
+        dfd.setName(getAID()); //Recoge id del agente para el servicio dfd
 
-        //Crear descripcion del servicio
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("imprimir"); //Tipo de servicio
-        sd.setName("Coordinador imprimir");//Nombre del servicio
+        //Crear servicio
+        ServiceDescription imprimir = new ServiceDescription();
+        imprimir.setType("imprimir"); //Tipo de servicio
+        imprimir.setName("Coordinador imprimir");//Nombre del servicio
 
         //Añadir el servicio a la descripcion del agente
-        dfd.addServices(sd);
+        dfd.addServices(imprimir);
 
         //Registrar en el DF
         try {
@@ -51,24 +53,30 @@ public class Agente1 extends Agent {
         }
 
 
-        //Comportamiento cicñico: recibir mensajes
+        //Comportamiento ciclico
         cyclicBehaviour = new CyclicBehaviour(this) {
             private static final long serialVersionUID = 1L;
-            public void action() {
+            public void action() { //Define el codigo que se exe cada vez que el comportamiento se active
+               //Solo se aceptan mensajes de un tipo, en este caso REQUEST y de tipo ontologia
                 MessageTemplate mt = MessageTemplate.and (
                         MessageTemplate.MatchPerformative (ACLMessage.REQUEST),
                         MessageTemplate.MatchOntology("ontologia")
                 );
 
+                //El agente se bloquea (espera) hasta que llegue un mensaje que cumpla el filtro mt
                 ACLMessage msg = blockingReceive(mt);
+
+                //Si recibido
                 if (msg!=null){
                     try{
-                        System.out.println(getLocalName() + "ha enviando recibido: " + msg.getContentObject());
+                        System.out.println(getLocalName() + "ha recibido: " + msg.getContentObject());
                     }
                     catch (UnreadableException e){
                         e.printStackTrace();
                     }
                 }
+                //Si no hay mennsajes, el comportamiento se bloquea y no socnume recursos del sistema
+                //esperando a que llegue un mensaje valido
                 else{
                     block();
                 }
