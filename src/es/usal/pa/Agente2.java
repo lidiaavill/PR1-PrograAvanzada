@@ -34,14 +34,15 @@ public class Agente2 extends Agent {
 
         try{
             //Busca en el DF agentes que coincidan con la plantilla buscarAgente y restricciones
-            DFAgentDescription[] results = DFService.search(this, buscarAgente, sc);
+            DFAgentDescription[] agentesEncontrados= DFService.search(this, buscarAgente, sc);
 
-            if (results.length >0) {
+            if (agentesEncontrados.length >0) {
                 System.out.println(getLocalName() + "encontro los siguientes agentes");
 
-                for (DFAgentDescription dfd : results) { //recorre cada elemento de results,
+                //Recorre cada agente encontrado
+                for (DFAgentDescription dfd : agentesEncontrados) {
                     // en cada iteracion asigna la descripcion del agente actual a la variable dfd
-                    AID provider = dfd.getName(); //guarda el id del agente descrito por dfd en provider
+                    AID idAgent = dfd.getName(); //guarda el id del agente descrito por dfd en provider
 
                     //Recorre todos los servicios que ofrece el agente descrito por dfd
                     //it.hasNext () verifica si hay más servicios por recorrer
@@ -50,7 +51,7 @@ public class Agente2 extends Agent {
 
                         if (servicioBuscado.getType().equals(tipo)) {
                             System.out.println("- Servicio \"" + servicioBuscado.getName() +
-                                    "\" proporcionado por el agente " + provider.getLocalName());
+                                    "\" proporcionado por el agente " + idAgent.getLocalName());
                             return dfd;
                         }
                     }
